@@ -1,30 +1,28 @@
 package com.purbon.kafka.connect;
 
-import javassist.bytecode.AttributeInfo;
-
-import javax.management.Attribute;
-import javax.management.AttributeNotFoundException;
-import javax.management.InstanceNotFoundException;
-import javax.management.IntrospectionException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 import javax.management.MBeanAttributeInfo;
-import javax.management.MBeanException;
 import javax.management.MBeanInfo;
 import javax.management.MBeanServerConnection;
-import javax.management.MalformedObjectNameException;
 import javax.management.Notification;
 import javax.management.NotificationListener;
 import javax.management.ObjectName;
-import javax.management.ReflectionException;
 import javax.management.remote.JMXConnector;
 import javax.management.remote.JMXConnectorFactory;
 import javax.management.remote.JMXServiceURL;
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.Set;
-import java.util.TreeSet;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class JMXClient {
 
+
+    private static final Logger log = LoggerFactory.getLogger(JMXClient.class);
 
     class ClientNotificationListener implements NotificationListener {
 
@@ -47,8 +45,11 @@ public class JMXClient {
     private JMXConnector connector;
     private MBeanServerConnection mbsc;
 
+    private ObjectMapper mapper;
+
     public JMXClient(String url) {
         this.url = url;
+        this.mapper = new ObjectMapper();
     }
 
     public void connect() throws IOException {
@@ -74,37 +75,25 @@ public class JMXClient {
 
     }
 
-    public void get(String metric) {
-        ObjectName objectName = null;
+    public String get(String metric) throws JMXConnectorException {
+        ObjectName objectName;
         try {
             objectName = new ObjectName(metric);
 
-            //System.out.println(mbsc.getMBeanInfo(objectName));
             MBeanInfo info = mbsc.getMBeanInfo(objectName);
+            Map<String, Object> attributes = new HashMap<String, Object>();
 
             for(MBeanAttributeInfo attr : info.getAttributes()) {
-                System.out.println(attr.getName()+" "+mbsc.getAttribute(objectName, attr.getName()));
+                attributes.put(attr.getName(), mbsc.getAttribute(objectName, attr.getName()));
             }
-
-        } catch (MalformedObjectNameException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (ReflectionException e) {
-            e.printStackTrace();
-        } catch (InstanceNotFoundException e) {
-            e.printStackTrace();
-        } catch (IntrospectionException e) {
-            e.printStackTrace();
-        } catch (AttributeNotFoundException e) {
-            e.printStackTrace();
-        } catch (MBeanException e) {
-            e.printStackTrace();
+            return mapper.writeValueAsString(attributes);
+        } catch (Exception e) {
+            log.error("Can not get the JMX metric", e);
+            throw new JMXConnectorException(e);
         }
 
-
-
     }
+
     public void start() {
         ClientNotificationListener listener = new ClientNotificationListener();
         connector.addConnectionNotificationListener(listener, null, null);
@@ -120,7 +109,7 @@ public class JMXClient {
 
     public static void main(String[] args) {
 
-        JMXClient client = new JMXClient("service:jmx:rmi:///jndi/rmi://192.168.1.5:9292/jmxrmi");
+        JMXClient client = new JMXClient("service:jmx:rmi:///jndi/rmi://127.0.0.1:9292/jmxrmi");
 
         try {
             client.connect();
@@ -129,7 +118,7 @@ public class JMXClient {
 
             client.get("kafka.server:type=BrokerTopicMetrics,name=BytesInPerSec");
 
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         } finally {
             client.close();

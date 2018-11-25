@@ -1,0 +1,4 @@
+com/purbon/kafka/connect/JMXSourceConnector.class
+com/purbon/kafka/connect/JMXClient$ClientNotificationListener.class
+com/purbon/kafka/connect/JMXClient.class
+com/purbon/kafka/connect/JMXSourceTask.class

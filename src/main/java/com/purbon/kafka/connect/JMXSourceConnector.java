@@ -9,12 +9,16 @@ import java.util.Map;
 
 public class JMXSourceConnector extends SourceConnector {
 
-    public void start(Map<String, String> map) {
 
+    private JMXConnectorConfig config;
+
+    public void start(Map<String, String> config) {
+
+        this.config = new JMXConnectorConfig(config);
     }
 
     public Class<? extends Task> taskClass() {
-        return null;
+        return JMXSourceTask.class;
     }
 
     public List<Map<String, String>> taskConfigs(int i) {
@@ -26,10 +30,10 @@ public class JMXSourceConnector extends SourceConnector {
     }
 
     public ConfigDef config() {
-        return null;
+        return JMXConnectorConfig.CONFIG;
     }
 
     public String version() {
-        return null;
+        return Version.getVersion();
     }
 }
