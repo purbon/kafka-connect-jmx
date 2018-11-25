@@ -1,14 +1,11 @@
 package com.purbon.kafka.connect;
 
-import com.sun.xml.internal.ws.streaming.SourceReaderFactory;
 import java.util.ArrayList;
 import java.util.Collections;
-import org.apache.kafka.connect.data.Struct;
-import org.apache.kafka.connect.source.SourceRecord;
-import org.apache.kafka.connect.source.SourceTask;
-
 import java.util.List;
 import java.util.Map;
+import org.apache.kafka.connect.source.SourceRecord;
+import org.apache.kafka.connect.source.SourceTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
